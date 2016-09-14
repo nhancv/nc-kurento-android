@@ -1,0 +1,1 @@
+![demo](https://raw.githubusercontent.com/nhancv/nc-kurento-android/master/img/demo.png)

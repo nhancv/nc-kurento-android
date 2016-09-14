@@ -74,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
         settings.setLoadWithOverviewMode(true);
         //Enable pinch to zoom without the zoom buttons
         settings.setBuiltInZoomControls(true);
+        //Hide scrollbar
+        webView.setVerticalScrollBarEnabled(false);
         //Allow use of Local Storage
         settings.setDomStorageEnabled(true);
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {

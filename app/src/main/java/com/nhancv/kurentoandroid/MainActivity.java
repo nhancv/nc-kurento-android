@@ -1,5 +1,6 @@
 package com.nhancv.kurentoandroid;
 
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -13,8 +14,10 @@ import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
+import org.webrtc.RendererCommon;
 import org.webrtc.SessionDescription;
 import org.webrtc.VideoRenderer;
+import org.webrtc.VideoRendererGui;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -40,13 +43,14 @@ import fi.vtt.nubomedia.webrtcpeerandroid.NBMWebRTCPeer;
 public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Observer {
     private static final String TAG = MainActivity.class.getName();
     String host = "wss://192.168.1.59:7003/one2one";
-    VideoRenderer.Callbacks localRender;
     NBMWebRTCPeer nbmWebRTCPeer;
     NBMMediaConfiguration mediaConfiguration;
-    VideoRenderer.Callbacks remoteRender;
     LooperExecutor executor;
     WebSocketClient client;
     private KeyStore keyStore;
+    private GLSurfaceView vsv;
+    private VideoRenderer.Callbacks localRender;
+    private VideoRenderer.Callbacks remoteRender;
 
     private void connectWebSocket() {
         URI uri;
@@ -66,12 +70,33 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-//                client.send("Hello from " + Build.MANUFACTURER + " " + Build.MODEL);
             }
 
             @Override
             public void onMessage(String s) {
                 final String message = s;
+
+                try {
+                    JSONObject obj = new JSONObject(s);
+                    String command = obj.getString("id");
+                    if (command.equals("incomingCall")) {
+//                        {"id":"incomingCall","from":"test1"}
+                        String from = obj.getString("from");
+                        nbmWebRTCPeer.generateOffer(from, true);
+
+
+
+
+                    }else if (command.equals("registerResponse")) {
+//                        {"id":"registerResponse","response":"accepted"}
+
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -138,17 +163,48 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        executor = new LooperExecutor();
-        executor.requestStart();
-        connectWebSocket();
 
-//        localRender = VideoRendererGui.create(72, 72, 25, 25, RendererCommon.ScalingType.SCALE_ASPECT_FILL, false);
-//        mediaConfiguration = new NBMMediaConfiguration();
-//        nbmWebRTCPeer = new NBMWebRTCPeer(mediaConfiguration, this, localRender, this);
-//        nbmWebRTCPeer.initialize();
+        initView();
+
 
     }
 
+    private void initView() {
+
+        vsv = (GLSurfaceView) findViewById(R.id.glview_call);
+        vsv.setPreserveEGLContextOnPause(true);
+        vsv.setKeepScreenOn(true);
+        VideoRendererGui.setView(vsv, new Runnable() {
+            @Override
+            public void run() {
+                executor = new LooperExecutor();
+                executor.requestStart();
+
+                localRender = VideoRendererGui.create(72, 72, 25, 25, RendererCommon.ScalingType.SCALE_ASPECT_FILL, false);
+                mediaConfiguration = new NBMMediaConfiguration();
+                nbmWebRTCPeer = new NBMWebRTCPeer(mediaConfiguration, MainActivity.this, localRender, MainActivity.this);
+                nbmWebRTCPeer.initialize();
+                nbmWebRTCPeer.enableVideo(true);
+                nbmWebRTCPeer.startLocalMedia();
+                connectWebSocket();
+
+
+            }
+        });
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        vsv.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        vsv.onResume();
+    }
 
     public void sendRegister() throws JSONException {
         JSONObject obj = new JSONObject();
@@ -184,57 +240,58 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
 
     @Override
     public void onLocalSdpOfferGenerated(SessionDescription localSdpOffer, NBMPeerConnection connection) {
-        nbmWebRTCPeer.generateOffer("connectionId", true);
+        Log.e(TAG, "onLocalSdpOfferGenerated: " + localSdpOffer);
     }
 
     @Override
     public void onLocalSdpAnswerGenerated(SessionDescription localSdpAnswer, NBMPeerConnection connection) {
-
+        Log.e(TAG, "onLocalSdpAnswerGenerated: " + localSdpAnswer);
     }
 
     @Override
     public void onIceCandidate(IceCandidate localIceCandidate, NBMPeerConnection connection) {
-
+        Log.e(TAG, "onIceCandidate: " + localIceCandidate);
     }
 
     @Override
     public void onIceStatusChanged(PeerConnection.IceConnectionState state, NBMPeerConnection connection) {
-
+        Log.e(TAG, "onIceStatusChanged: " + state);
     }
 
     @Override
     public void onRemoteStreamAdded(MediaStream stream, NBMPeerConnection connection) {
+        Log.e(TAG, "onRemoteStreamAdded: ");
         nbmWebRTCPeer.attachRendererToRemoteStream(remoteRender, stream);
     }
 
     @Override
     public void onRemoteStreamRemoved(MediaStream stream, NBMPeerConnection connection) {
-
+        Log.e(TAG, "onRemoteStreamRemoved: ");
     }
 
     @Override
     public void onPeerConnectionError(String error) {
-
+        Log.e(TAG, "onPeerConnectionError: ");
     }
 
     @Override
     public void onDataChannel(DataChannel dataChannel, NBMPeerConnection connection) {
-
+        Log.e(TAG, "onDataChannel: ");
     }
 
     @Override
     public void onBufferedAmountChange(long l, NBMPeerConnection connection, DataChannel channel) {
-
+        Log.e(TAG, "onBufferedAmountChange: ");
     }
 
     @Override
     public void onStateChange(NBMPeerConnection connection, DataChannel channel) {
-
+        Log.e(TAG, "onStateChange: ");
     }
 
     @Override
     public void onMessage(DataChannel.Buffer buffer, NBMPeerConnection connection, DataChannel channel) {
-
+        Log.e(TAG, "onMessage: " + buffer);
     }
 
 

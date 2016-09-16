@@ -6,6 +6,11 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.nhancv.webrtcpeerandroid.LooperExecutor;
+import com.nhancv.webrtcpeerandroid.NMediaConfiguration;
+import com.nhancv.webrtcpeerandroid.NPeerConnection;
+import com.nhancv.webrtcpeerandroid.NWebRTCPeer;
+
 import org.java_websocket.client.DefaultSSLWebSocketClientFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -36,12 +41,8 @@ import java.security.cert.CertificateFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import fi.vtt.nubomedia.utilitiesandroid.LooperExecutor;
-import fi.vtt.nubomedia.webrtcpeerandroid.NBMMediaConfiguration;
-import fi.vtt.nubomedia.webrtcpeerandroid.NBMPeerConnection;
-import fi.vtt.nubomedia.webrtcpeerandroid.NBMWebRTCPeer;
 
-public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Observer {
+public class MainActivity extends AppCompatActivity implements NWebRTCPeer.Observer {
     private static final String TAG = MainActivity.class.getName();
     // Local preview screen position before call is connected.
     private static final int LOCAL_X_CONNECTING = 0;
@@ -59,8 +60,8 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
     private static final int REMOTE_WIDTH = 100;
     private static final int REMOTE_HEIGHT = 100;
     private static final String host = "wss://local.beesightsoft.com:7003/one2one";
-    NBMWebRTCPeer nbmWebRTCPeer;
-    NBMMediaConfiguration mediaConfiguration;
+    NWebRTCPeer nbmWebRTCPeer;
+    NMediaConfiguration mediaConfiguration;
     LooperExecutor executor;
     WebSocketClient client;
     String connectionId = "test1";
@@ -199,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
         executor = new LooperExecutor();
         executor.requestStart();
 
-        mediaConfiguration = new NBMMediaConfiguration();
+        mediaConfiguration = new NMediaConfiguration();
         videoView = (GLSurfaceView) findViewById(R.id.glview_call);
         assert videoView != null;
         videoView.setPreserveEGLContextOnPause(true);
@@ -264,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
             Log.e(TAG, "callResponse: Call not accepted by peer. Closing call");
             stop(true);
         } else {
-            nbmWebRTCPeer.processAnswer(new SessionDescription(SessionDescription.Type.ANSWER, sdpAnswer), connectionId);
+            startCommunication(sdpAnswer, connectionId);
         }
 
     }
@@ -288,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
 //        }
             // TODO: 9/15/16 Set PROCESSING_CALL
             //Confirm accept true
-            nbmWebRTCPeer = new NBMWebRTCPeer(mediaConfiguration, MainActivity.this, localRender, MainActivity.this);
+            nbmWebRTCPeer = new NWebRTCPeer(mediaConfiguration, MainActivity.this, localRender, MainActivity.this);
             nbmWebRTCPeer.initialize();
 
             nbmWebRTCPeer.generateOffer(connectionId, true);
@@ -324,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
         Log.e(TAG, "call: ");
 
         coodinator = true;
-        nbmWebRTCPeer = new NBMWebRTCPeer(mediaConfiguration, MainActivity.this, localRender, MainActivity.this);
+        nbmWebRTCPeer = new NWebRTCPeer(mediaConfiguration, MainActivity.this, localRender, MainActivity.this);
         nbmWebRTCPeer.initialize();
         nbmWebRTCPeer.generateOffer(connectionId, true);
     }
@@ -377,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
     }
 
     @Override
-    public void onLocalSdpOfferGenerated(SessionDescription localSdpOffer, NBMPeerConnection connection) {
+    public void onLocalSdpOfferGenerated(SessionDescription localSdpOffer, NPeerConnection connection) {
         Log.e(TAG, "onLocalSdpOfferGenerated: " + localSdpOffer.type + " -" + localSdpOffer.description);
         if (coodinator) {
             try {
@@ -406,22 +407,12 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
     }
 
     @Override
-    public void onLocalSdpAnswerGenerated(SessionDescription localSdpAnswer, NBMPeerConnection connection) {
+    public void onLocalSdpAnswerGenerated(SessionDescription localSdpAnswer, NPeerConnection connection) {
 //        Log.e(TAG, "onLocalSdpAnswerGenerated: " + localSdpAnswer.type + " -" + localSdpAnswer.description);
-//        try {
-//            JSONObject obj = new JSONObject();
-//            obj.put("id", "incomingCallResponse");
-//            obj.put("from", connectionId);
-//            obj.put("callResponse", "accept");
-//            obj.put("sdpOffer", localSdpAnswer.description);
-//            send(obj);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
     }
 
     @Override
-    public void onIceCandidate(IceCandidate localIceCandidate, NBMPeerConnection connection) {
+    public void onIceCandidate(IceCandidate localIceCandidate, NPeerConnection connection) {
         Log.e(TAG, "onIceCandidate: " + localIceCandidate);
         try {
             JSONObject obj = new JSONObject();
@@ -438,12 +429,12 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
     }
 
     @Override
-    public void onIceStatusChanged(PeerConnection.IceConnectionState state, NBMPeerConnection connection) {
+    public void onIceStatusChanged(PeerConnection.IceConnectionState state, NPeerConnection connection) {
         Log.e(TAG, "onIceStatusChanged: " + state);
     }
 
     @Override
-    public void onRemoteStreamAdded(MediaStream stream, NBMPeerConnection connection) {
+    public void onRemoteStreamAdded(MediaStream stream, NPeerConnection connection) {
         Log.e(TAG, "onRemoteStreamAdded: ");
         nbmWebRTCPeer.attachRendererToRemoteStream(remoteRender, stream);
         VideoRendererGui.update(remoteRender,
@@ -456,7 +447,7 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
     }
 
     @Override
-    public void onRemoteStreamRemoved(MediaStream stream, NBMPeerConnection connection) {
+    public void onRemoteStreamRemoved(MediaStream stream, NPeerConnection connection) {
         Log.e(TAG, "onRemoteStreamRemoved: ");
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
@@ -471,22 +462,22 @@ public class MainActivity extends AppCompatActivity implements NBMWebRTCPeer.Obs
     }
 
     @Override
-    public void onDataChannel(DataChannel dataChannel, NBMPeerConnection connection) {
+    public void onDataChannel(DataChannel dataChannel, NPeerConnection connection) {
         Log.e(TAG, "onDataChannel: ");
     }
 
     @Override
-    public void onBufferedAmountChange(long l, NBMPeerConnection connection, DataChannel channel) {
+    public void onBufferedAmountChange(long l, NPeerConnection connection, DataChannel channel) {
         Log.e(TAG, "onBufferedAmountChange: ");
     }
 
     @Override
-    public void onStateChange(NBMPeerConnection connection, DataChannel channel) {
+    public void onStateChange(NPeerConnection connection, DataChannel channel) {
         Log.e(TAG, "onStateChange: ");
     }
 
     @Override
-    public void onMessage(DataChannel.Buffer buffer, NBMPeerConnection connection, DataChannel channel) {
+    public void onMessage(DataChannel.Buffer buffer, NPeerConnection connection, DataChannel channel) {
         Log.e(TAG, "onMessage: " + buffer);
     }
 

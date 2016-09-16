@@ -1,0 +1,29 @@
+Connection received with sessionId 1
+Connection 1 sent message  { id: 'register', name: 'test' }
+Connection received with sessionId 2
+Connection 2 sent message  { id: 'register', name: 'test1' }
+
+Connection 2 sent message  { id: 'call',
+  from: 'test1',
+  to: 'test',
+  sdpOffer: 'v=0\r\no=- 6063244044462085120 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE audio video\r\na=msid-semantic: WMS LKvOWMWkgqJQg7hkwBYEXuYxe1YfuGeOYlqW\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 126\r\nc=IN IP4 0.0.0.0\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:aEAI\r\na=ice-pwd:xtGRs1ySRfzqZJQ9G5qRv+OJ\r\na=fingerprint:sha-256 C2:12:48:0E:64:21:3E:CD:B4:7A:A4:18:92:84:7E:F5:53:B3:82:EC:04:47:27:05:EF:15:6A:59:AE:41:E2:1E................'}
+  Connection 2 sent message  { id: 'onIceCandidate',
+  candidate: 
+   { candidate: 'candidate:2039525022 1 udp 2122260223 192.168.57.1 49742 typ host generation 0 ufrag aEAI network-id 2 network-cost 50',
+     sdpMid: 'audio',
+     sdpMLineIndex: 0 } }
+...............
+
+
+
+Connection 1 sent message  { id: 'incomingCallResponse',
+  from: 'test1',
+  callResponse: 'accept',
+  sdpOffer: 'v=0\r\no=- 2524342116804591993 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE audio video\r\na=msid-semantic: WMS t0d8XVP25cO5oOUPLL1jc0XGRQHockX6xBhL\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 126\r\nc=IN IP4 0.0.0.0\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:U//z\r\na=ice-pwd:Yd1ArFoteDPg4uRljMsX7WZF\r\na=fingerprint:sha-256 F1:2D:AB:72:90:DB:45:7A:C8:7B:DC:9E:13:E1:23:F7:CB:08:F2:F4:6D:C7:FD:18:95:F5:3A:98:EA:79:74:0E\r\na=setup:actpass\r\na=mid:audio\r\na=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\na=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\na=sendrecv\r\na=rtcp-mux\r\na=rtpmap:111 opus/48000/2\r\na=rtcp-f..............'}
+
+ Connection 1 sent message  { id: 'onIceCandidate',
+  candidate: 
+   { candidate: 'candidate:2039525022 1 udp 2122260223 192.168.57.1 62174 typ host generation 0 ufrag U//z network-id 2 network-cost 50',
+     sdpMid: 'audio',
+     sdpMLineIndex: 0 } }
+................... 

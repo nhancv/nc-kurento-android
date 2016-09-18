@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Kurento Android</string>
+
+    <!--Dialog-->
+    <string name="dialog_later">Later</string>
+    <string name="dialog_tryagain">Try again</string>
+    <string name="dialog_replace">Replace</string>
+    <string name="dialog_merge">Merge</string>
+    <string name="dialog_close">Close</string>
+    <string name="dialog_network_title">Network</string>
+    <string name="dialog_network_nonetwork">No network</string>
+    <string name="dialog_error_title">Error</string>
+
 </resources>

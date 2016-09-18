@@ -27,6 +27,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".One2OneActivity"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

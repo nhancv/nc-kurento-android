@@ -1,11 +1,17 @@
-package com.nhancv.kurentoandroid;
+package com.nhancv.kurentoandroid.util;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 
 /**
  * Created by nhancao on 9/18/16.
@@ -13,6 +19,87 @@ import android.util.Log;
 public class Utils {
     private static final String TAG = Utils.class.getName();
 
+
+    /**
+     * Check network is connected or not
+     *
+     * @param context
+     * @return true if connected otherwise return false
+     */
+    public static boolean isNetworkConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnected();
+    }
+
+    /**
+     * Validate input (EditText view)
+     *
+     * @param input EditText
+     * @return true if input view not empty
+     */
+    public static boolean validateInput(EditText input) {
+        return validateInput(input, false);
+    }
+
+    /**
+     * Validate input with option isEmail (EditText view)
+     *
+     * @param input EditText
+     * @return true if input view not empty
+     */
+    public static boolean validateInput(EditText input, boolean isEmail) {
+        input.setError(null);
+        String name = input.getText().toString().trim();
+        boolean valid = true;
+        EditText focusView = null;
+        String errorMsg = null;
+
+        if (TextUtils.isEmpty(name)) {
+            valid = false;
+            focusView = input;
+            errorMsg = "This input is required";
+        } else if (isEmail && !isEmailValid(name)) {
+            valid = false;
+            focusView = input;
+            errorMsg = "Email is not valid";
+        }
+
+        if (!valid) {
+            focusView.setError(errorMsg);
+            focusView.requestFocus();
+        }
+
+        return valid;
+    }
+
+    /**
+     * Check mail is valid
+     *
+     * @param email
+     * @return true if mail is valid
+     */
+    public static boolean isEmailValid(CharSequence email) {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    /**
+     * Hide soft keyboard with View
+     *
+     * @param editText
+     */
+    public static void hideKeyboard(final View editText) {
+        if (editText != null) {
+            // Delay some time to get focus(error occurs on HTC Android)
+            editText.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    InputMethodManager imm = (InputMethodManager) editText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+                }
+            }, 50);
+        }
+    }
 
     /**
      * Restart application from context

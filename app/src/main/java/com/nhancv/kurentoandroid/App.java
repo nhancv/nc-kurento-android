@@ -7,6 +7,8 @@ import android.app.Application;
  */
 public class App extends Application {
 
+    private static final String host = "wss://local.beesightsoft.com:7003/one2one";
+
     @Override
     public void onCreate() {
         super.onCreate();

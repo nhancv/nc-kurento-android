@@ -1,4 +1,4 @@
-package com.nhancv.kurentoandroid;
+package com.nhancv.kurentoandroid.util;
 
 import android.content.DialogInterface;
 import android.view.View;

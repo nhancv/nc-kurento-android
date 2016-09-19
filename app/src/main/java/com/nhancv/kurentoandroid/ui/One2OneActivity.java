@@ -212,7 +212,6 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
         executor = new LooperExecutor();
         executor.requestStart();
         initRTCComponent();
-        connectWebSocket();
     }
 
     @OnClick(R.id.btRegister)
@@ -247,6 +246,9 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
         vGLSurfaceViewCall.setKeepScreenOn(true);
 
         VideoRendererGui.setView(vGLSurfaceViewCall, () -> {
+            Point displaySize = new Point();
+            getWindowManager().getDefaultDisplay().getSize(displaySize);
+            connectWebSocket();
         });
         // local and remote render
         remoteRender = VideoRendererGui.create(
@@ -255,8 +257,6 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
         localRender = VideoRendererGui.create(
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING, scalingType, true);
-        Point displaySize = new Point();
-        getWindowManager().getDefaultDisplay().getSize(displaySize);
     }
 
     @Override
@@ -415,7 +415,7 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
         callState = Calling.PROCESSING_CALL;
         coordinator = true;
         nbmWebRTCPeer = new NWebRTCPeer(mediaConfiguration, One2OneActivity.this, localRender, One2OneActivity.this);
-        nbmWebRTCPeer.initialize();
+        nbmWebRTCPeer.initialize(); 
         nbmWebRTCPeer.generateOffer(connectionId, true);
     }
 
@@ -562,6 +562,12 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
     @Override
     public void onMessage(DataChannel.Buffer buffer, NPeerConnection connection, DataChannel channel) {
         Log.e(TAG, "onMessage: " + buffer);
+    }
+
+    @Override
+    public void onBackPressed() {
+        client.close();
+        super.onBackPressed();
     }
 
     enum Reg {

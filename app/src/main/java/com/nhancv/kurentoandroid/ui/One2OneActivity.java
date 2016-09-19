@@ -10,9 +10,9 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.gc.materialdesign.views.ButtonFlat;
+import com.nhancv.kurentoandroid.R;
 import com.nhancv.kurentoandroid.util.ICollections;
 import com.nhancv.kurentoandroid.util.NDialog;
-import com.nhancv.kurentoandroid.R;
 import com.nhancv.kurentoandroid.util.Utils;
 import com.nhancv.webrtcpeerandroid.LooperExecutor;
 import com.nhancv.webrtcpeerandroid.NMediaConfiguration;
@@ -112,7 +112,9 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
             @Override
             public void onOpen(ServerHandshake serverHandshake) {
                 Log.i("Websocket", "Opened");
-                btRegister.setEnabled(true);
+                runOnUiThread(() -> {
+                    btRegister.setEnabled(true);
+                });
             }
 
             @Override
@@ -205,7 +207,11 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_one2one);
         ButterKnife.bind(this);
+        btCall.setEnabled(false);
         btRegister.setEnabled(false);
+        executor = new LooperExecutor();
+        executor.requestStart();
+        initRTCComponent();
         connectWebSocket();
     }
 
@@ -235,20 +241,12 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
      * Init view component for initialize calling
      */
     private void initRTCComponent() {
-        executor = new LooperExecutor();
-        executor.requestStart();
-
         mediaConfiguration = new NMediaConfiguration();
         vGLSurfaceViewCall.setPreserveEGLContextOnPause(true);
         vGLSurfaceViewCall.setEGLContextClientVersion(2);
         vGLSurfaceViewCall.setKeepScreenOn(true);
 
         VideoRendererGui.setView(vGLSurfaceViewCall, () -> {
-            Point displaySize = new Point();
-            getWindowManager().getDefaultDisplay().getSize(displaySize);
-            //Visible call view
-            vCall.setVisibility(View.VISIBLE);
-
         });
         // local and remote render
         remoteRender = VideoRendererGui.create(
@@ -257,7 +255,8 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
         localRender = VideoRendererGui.create(
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING, scalingType, true);
-
+        Point displaySize = new Point();
+        getWindowManager().getDefaultDisplay().getSize(displaySize);
     }
 
     @Override
@@ -293,7 +292,11 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
     public void registerResponse(String response) {
         if (response.equals("accepted")) {
             regState = Reg.REGISTERED;
-            initRTCComponent();
+            runOnUiThread(() -> {
+                btRegister.setEnabled(false);
+                etCallerId.setEnabled(false);
+                btCall.setEnabled(true);
+            });
         } else {
             regState = Reg.NOT_REGISTERED;
         }
@@ -340,30 +343,36 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
             }
             return;
         }
-        NDialog.showConfirmDialog(this, "Incomming call", from + " call you?", new ICollections.IDialogConfirmButtonImpl() {
-            @Override
-            public void positive(DialogInterface dialog, View button, View rootView) {
-                callState = Calling.PROCESSING_CALL;
-                nbmWebRTCPeer = new NWebRTCPeer(mediaConfiguration, One2OneActivity.this, localRender, One2OneActivity.this);
-                nbmWebRTCPeer.initialize();
-                nbmWebRTCPeer.generateOffer(connectionId, true);
-            }
 
-            @Override
-            public void negative(DialogInterface dialog, View button, View rootView) {
-                try {
-                    JSONObject obj = new JSONObject();
-                    obj.put("id", "incomingCallResponse");
-                    obj.put("from", connectionId);
-                    obj.put("callResponse", "reject");
-                    obj.put("message", "user declined");
-                    send(obj);
-                    stop(true);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+        runOnUiThread(() -> {
+            NDialog.showConfirmDialog(this, "Incomming call", from + " call you?", new ICollections.IDialogConfirmButtonImpl() {
+                @Override
+                public void positive(DialogInterface dialog, View button, View rootView) {
+                    callState = Calling.PROCESSING_CALL;
+                    nbmWebRTCPeer = new NWebRTCPeer(mediaConfiguration, One2OneActivity.this, localRender, One2OneActivity.this);
+                    nbmWebRTCPeer.initialize();
+                    nbmWebRTCPeer.generateOffer(connectionId, true);
+                    dialog.dismiss();
                 }
-            }
-        }).show();
+
+                @Override
+                public void negative(DialogInterface dialog, View button, View rootView) {
+                    try {
+                        JSONObject obj = new JSONObject();
+                        obj.put("id", "incomingCallResponse");
+                        obj.put("from", connectionId);
+                        obj.put("callResponse", "reject");
+                        obj.put("message", "user declined");
+                        send(obj);
+                        stop(true);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    dialog.cancel();
+                }
+            }).show();
+        });
+
     }
 
     /**
@@ -374,8 +383,9 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
      */
     public void startCommunication(String sdpAnswer, String connectionId) {
         callState = Calling.IN_CALL;
-        vRegister.setVisibility(View.GONE);
-        vGLSurfaceViewCall.setVisibility(View.VISIBLE);
+        runOnUiThread(() -> {
+            vRegister.setVisibility(View.GONE);
+        });
         nbmWebRTCPeer.processAnswer(new SessionDescription(SessionDescription.Type.ANSWER, sdpAnswer), connectionId);
     }
 
@@ -383,10 +393,10 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
      * Stop communication
      */
     public void stopCommunication() {
-        vRegister.setVisibility(View.VISIBLE);
-        vGLSurfaceViewCall.setVisibility(View.GONE);
-
         stop(true);
+        runOnUiThread(() -> {
+            vRegister.setVisibility(View.VISIBLE);
+        });
     }
 
     /**
@@ -426,7 +436,6 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
                     e.printStackTrace();
                 }
             }
-            client.close();
             nbmWebRTCPeer.stopLocalMedia();
             nbmWebRTCPeer.close();
             nbmWebRTCPeer = null;

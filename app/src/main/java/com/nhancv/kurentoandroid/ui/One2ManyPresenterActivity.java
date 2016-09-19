@@ -1,19 +1,14 @@
 package com.nhancv.kurentoandroid.ui;
 
-import android.content.DialogInterface;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.EditText;
+import android.widget.Button;
+import android.widget.Toast;
 
-import com.gc.materialdesign.views.ButtonFlat;
-import com.nhancv.kurentoandroid.util.ICollections;
-import com.nhancv.kurentoandroid.util.NDialog;
 import com.nhancv.kurentoandroid.R;
-import com.nhancv.kurentoandroid.util.Utils;
 import com.nhancv.webrtcpeerandroid.LooperExecutor;
 import com.nhancv.webrtcpeerandroid.NMediaConfiguration;
 import com.nhancv.webrtcpeerandroid.NPeerConnection;
@@ -56,47 +51,22 @@ import butterknife.OnClick;
 
 public class One2ManyPresenterActivity extends AppCompatActivity implements NWebRTCPeer.Observer {
     private static final String TAG = One2ManyPresenterActivity.class.getName();
-    // Local preview screen position before call is connected.
     private static final int LOCAL_X_CONNECTING = 0;
     private static final int LOCAL_Y_CONNECTING = 0;
     private static final int LOCAL_WIDTH_CONNECTING = 100;
     private static final int LOCAL_HEIGHT_CONNECTING = 100;
-    // Local preview screen position after call is connected.
-    private static final int LOCAL_X_CONNECTED = 72;
-    private static final int LOCAL_Y_CONNECTED = 72;
-    private static final int LOCAL_WIDTH_CONNECTED = 25;
-    private static final int LOCAL_HEIGHT_CONNECTED = 25;
-    // Remote video screen position
-    private static final int REMOTE_X = 0;
-    private static final int REMOTE_Y = 0;
-    private static final int REMOTE_WIDTH = 100;
-    private static final int REMOTE_HEIGHT = 100;
-    private static final String host = "wss://local.beesightsoft.com:7003/one2one";
-    boolean coordinator;
+    private static final String host = "wss://local.beesightsoft.com:7002/one2many";
     @BindView(R.id.vGLSurfaceViewCall)
     GLSurfaceView vGLSurfaceViewCall;
-    @BindView(R.id.vRegister)
-    View vRegister;
-    @BindView(R.id.vCall)
-    View vCall;
-    @BindView(R.id.btRegister)
-    ButtonFlat btRegister;
-    @BindView(R.id.btCall)
-    ButtonFlat btCall;
-    @BindView(R.id.etCallerId)
-    EditText etCallerId;
-    @BindView(R.id.etCalleeId)
-    EditText etCalleeId;
+    @BindView(R.id.btClose)
+    Button btClose;
     private NWebRTCPeer nbmWebRTCPeer;
     private NMediaConfiguration mediaConfiguration;
     private LooperExecutor executor;
     private WebSocketClient client;
-    private String self, connectionId;
+    private String connectionId = "presenter";
     private KeyStore keyStore;
     private VideoRenderer.Callbacks localRender;
-    private VideoRenderer.Callbacks remoteRender;
-    private Reg regState = Reg.NOT_REGISTERED;
-    private Calling callState = Calling.NO_CALL;
     private RendererCommon.ScalingType scalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL;
 
     private void connectWebSocket() {
@@ -107,12 +77,11 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
             e.printStackTrace();
             return;
         }
-
         client = new WebSocketClient(uri) {
             @Override
             public void onOpen(ServerHandshake serverHandshake) {
                 Log.i("Websocket", "Opened");
-                btRegister.setEnabled(true);
+                createWebRTCPeer();
             }
 
             @Override
@@ -121,30 +90,14 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
                 try {
                     JSONObject obj = new JSONObject(s);
                     String command = obj.getString("id");
-                    if (command.equals("registerResponse")) {
-                        registerResponse(obj.getString("response"));
-                    } else if (command.equals("callResponse")) {
-                        callResponse(obj.getString("response"), obj.getString("sdpAnswer"), connectionId);
-
-                    } else if (command.equals("incomingCall")) {
-                        String from = obj.getString("from");
-                        incomingCall(from);
-
-                    } else if (command.equals("startCommunication")) {
-                        startCommunication(obj.getString("sdpAnswer"), connectionId);
-
-                    } else if (command.equals("stopCommunication")) {
-                        stopCommunication();
-
+                    if (command.equals("presenterResponse")) {
+                        presenterResponse(obj);
                     } else if (command.equals("iceCandidate")) {
-
                         JSONObject candidate = new JSONObject(obj.getString("candidate"));
                         String sdpMid = candidate.getString("sdpMid");
                         int sdpMLineIndex = candidate.getInt("sdpMLineIndex");
                         String sdp = candidate.getString("candidate");
-
                         iceCandidate(new IceCandidate(sdpMid, sdpMLineIndex, sdp));
-
                     }
 
                 } catch (JSONException e) {
@@ -184,6 +137,11 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
         client.connect();
     }
 
+    /**
+     * Set trusted certificate from file
+     *
+     * @param inputFile
+     */
     public void setTrustedCertificate(InputStream inputFile) {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -203,67 +161,36 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_one2one);
+        setContentView(R.layout.activity_one2many_presenter);
         ButterKnife.bind(this);
-        btRegister.setEnabled(false);
-        connectWebSocket();
-    }
-
-    @OnClick(R.id.btRegister)
-    public void btRegisterOnClick(View view) {
-        Utils.hideKeyboard(view);
-        if (Utils.validateInput(etCallerId)) {
-            self = etCallerId.getText().toString();
-            try {
-                registerRequest(self);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @OnClick(R.id.btCall)
-    public void btCallOnClick(View view) {
-        Utils.hideKeyboard(view);
-        if (Utils.validateInput(etCalleeId)) {
-            connectionId = etCalleeId.getText().toString();
-            call();
-        }
+        executor = new LooperExecutor();
+        executor.requestStart();
+        initRTCComponent();
     }
 
     /**
      * Init view component for initialize calling
      */
     private void initRTCComponent() {
-        executor = new LooperExecutor();
-        executor.requestStart();
-
         mediaConfiguration = new NMediaConfiguration();
         vGLSurfaceViewCall.setPreserveEGLContextOnPause(true);
         vGLSurfaceViewCall.setEGLContextClientVersion(2);
         vGLSurfaceViewCall.setKeepScreenOn(true);
-
         VideoRendererGui.setView(vGLSurfaceViewCall, () -> {
             Point displaySize = new Point();
             getWindowManager().getDefaultDisplay().getSize(displaySize);
-            //Visible call view
-            vCall.setVisibility(View.VISIBLE);
-
+            connectWebSocket();
         });
         // local and remote render
-        remoteRender = VideoRendererGui.create(
-                REMOTE_X, REMOTE_Y,
-                REMOTE_WIDTH, REMOTE_HEIGHT, scalingType, false);
         localRender = VideoRendererGui.create(
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING, scalingType, true);
-
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (callState == Calling.IN_CALL) {
+        if (vGLSurfaceViewCall != null) {
             vGLSurfaceViewCall.onPause();
         }
     }
@@ -271,122 +198,29 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
     @Override
     public void onResume() {
         super.onResume();
-        if (callState == Calling.IN_CALL) {
+        if (vGLSurfaceViewCall != null) {
             vGLSurfaceViewCall.onResume();
         }
     }
 
-    public void registerRequest(String callerId) throws JSONException {
-        JSONObject obj = new JSONObject();
-        obj.put("id", "register");
-        obj.put("name", callerId);
-        send(obj);
+    @OnClick(R.id.btClose)
+    public void btCloseOnClick() {
+        onBackPressed();
     }
-
     //Handle process
 
-    /**
-     * Handle register
-     *
-     * @param response
-     */
-    public void registerResponse(String response) {
+    private void presenterResponse(JSONObject obj) throws JSONException {
+        String response = obj.getString("response");
         if (response.equals("accepted")) {
-            regState = Reg.REGISTERED;
-            initRTCComponent();
+            String sdpAnswer = obj.getString("sdpAnswer");
+            nbmWebRTCPeer.processAnswer(new SessionDescription(SessionDescription.Type.ANSWER, sdpAnswer), connectionId);
         } else {
-            regState = Reg.NOT_REGISTERED;
+            Log.e(TAG, "presenterResponse: rejected");
+            runOnUiThread(() -> {
+                Toast.makeText(One2ManyPresenterActivity.this, "rejected", Toast.LENGTH_SHORT).show();
+                onBackPressed();
+            });
         }
-    }
-
-    /**
-     * Handle call response
-     *
-     * @param response
-     * @param sdpAnswer
-     * @param connectionId
-     */
-    public void callResponse(String response, String sdpAnswer, String connectionId) {
-        Log.e(TAG, "callResponse: ");
-        if (!response.equals("accepted")) {
-            Log.e(TAG, "callResponse: Call not accepted by peer. Closing call");
-            stop(true);
-        } else {
-            startCommunication(sdpAnswer, connectionId);
-        }
-
-    }
-
-    /**
-     * Handle when has incoming call
-     *
-     * @param from
-     */
-    public void incomingCall(String from) {
-        coordinator = false;
-        connectionId = from;
-
-        // If busy just reject without disturbing user
-        if (callState != Calling.NO_CALL) {
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("id", "incomingCallResponse");
-                obj.put("from", connectionId);
-                obj.put("callResponse", "reject");
-                obj.put("message", "busy");
-                send(obj);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            return;
-        }
-        NDialog.showConfirmDialog(this, "Incomming call", from + " call you?", new ICollections.IDialogConfirmButtonImpl() {
-            @Override
-            public void positive(DialogInterface dialog, View button, View rootView) {
-                callState = Calling.PROCESSING_CALL;
-                nbmWebRTCPeer = new NWebRTCPeer(mediaConfiguration, One2ManyPresenterActivity.this, localRender, One2ManyPresenterActivity.this);
-                nbmWebRTCPeer.initialize();
-                nbmWebRTCPeer.generateOffer(connectionId, true);
-            }
-
-            @Override
-            public void negative(DialogInterface dialog, View button, View rootView) {
-                try {
-                    JSONObject obj = new JSONObject();
-                    obj.put("id", "incomingCallResponse");
-                    obj.put("from", connectionId);
-                    obj.put("callResponse", "reject");
-                    obj.put("message", "user declined");
-                    send(obj);
-                    stop(true);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).show();
-    }
-
-    /**
-     * Start communication
-     *
-     * @param sdpAnswer
-     * @param connectionId
-     */
-    public void startCommunication(String sdpAnswer, String connectionId) {
-        callState = Calling.IN_CALL;
-        vRegister.setVisibility(View.GONE);
-        vGLSurfaceViewCall.setVisibility(View.VISIBLE);
-        nbmWebRTCPeer.processAnswer(new SessionDescription(SessionDescription.Type.ANSWER, sdpAnswer), connectionId);
-    }
-
-    /**
-     * Stop communication
-     */
-    public void stopCommunication() {
-        vRegister.setVisibility(View.VISIBLE);
-        vGLSurfaceViewCall.setVisibility(View.GONE);
-
-        stop(true);
     }
 
     /**
@@ -399,13 +233,11 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
     }
 
     /**
-     * Handle call to connectionId
+     * Handle create new webrtcpeer instance
      */
-    public void call() {
-        callState = Calling.PROCESSING_CALL;
-        coordinator = true;
+    public void createWebRTCPeer() {
         nbmWebRTCPeer = new NWebRTCPeer(mediaConfiguration, One2ManyPresenterActivity.this, localRender, One2ManyPresenterActivity.this);
-        nbmWebRTCPeer.initialize();
+//        nbmWebRTCPeer.setStreamMode(NWebRTCPeer.StreamMode.SEND_ONLY);
         nbmWebRTCPeer.generateOffer(connectionId, true);
     }
 
@@ -415,7 +247,6 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
      * @param messageSent
      */
     public void stop(boolean messageSent) {
-        callState = Calling.NO_CALL;
         if (nbmWebRTCPeer != null) {
             if (!messageSent) {
                 try {
@@ -426,17 +257,26 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
                     e.printStackTrace();
                 }
             }
-            client.close();
             nbmWebRTCPeer.stopLocalMedia();
             nbmWebRTCPeer.close();
             nbmWebRTCPeer = null;
         }
     }
 
+    /**
+     * Check socked is connected
+     *
+     * @return
+     */
     public boolean isWebSocketConnected() {
         return client != null && client.getConnection().isOpen();
     }
 
+    /**
+     * Send json message via socket
+     *
+     * @param message
+     */
     protected void send(final JSONObject message) {
         executor.execute(() -> {
             if (isWebSocketConnected()) {
@@ -454,30 +294,15 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
     @Override
     public void onLocalSdpOfferGenerated(SessionDescription localSdpOffer, NPeerConnection connection) {
         Log.e(TAG, "onLocalSdpOfferGenerated: " + localSdpOffer.type + " -" + localSdpOffer.description);
-        if (coordinator) {
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("id", "call");
-                obj.put("from", self);
-                obj.put("to", connectionId);
-                obj.put("sdpOffer", localSdpOffer.description);
-                send(obj);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("id", "incomingCallResponse");
-                obj.put("from", connectionId);
-                obj.put("callResponse", "accept");
-                obj.put("sdpOffer", localSdpOffer.description);
-                send(obj);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("id", "presenter");
+            obj.put("sdpOffer", localSdpOffer.description);
+            send(obj);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+
     }
 
     @Override
@@ -504,50 +329,30 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
 
     @Override
     public void onIceStatusChanged(PeerConnection.IceConnectionState state, NPeerConnection connection) {
-        Log.e(TAG, "onIceStatusChanged: " + state);
     }
 
     @Override
     public void onRemoteStreamAdded(MediaStream stream, NPeerConnection connection) {
-        Log.e(TAG, "onRemoteStreamAdded: ");
-        nbmWebRTCPeer.attachRendererToRemoteStream(remoteRender, stream);
-        VideoRendererGui.update(remoteRender,
-                REMOTE_X, REMOTE_Y,
-                REMOTE_WIDTH, REMOTE_HEIGHT, scalingType, false);
-        VideoRendererGui.update(localRender,
-                LOCAL_X_CONNECTED, LOCAL_Y_CONNECTED,
-                LOCAL_WIDTH_CONNECTED, LOCAL_HEIGHT_CONNECTED,
-                scalingType, true);
     }
 
     @Override
     public void onRemoteStreamRemoved(MediaStream stream, NPeerConnection connection) {
-        Log.e(TAG, "onRemoteStreamRemoved: ");
-        VideoRendererGui.update(localRender,
-                LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
-                LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
-                scalingType, true);
-
     }
 
     @Override
     public void onPeerConnectionError(String error) {
-        Log.e(TAG, "onPeerConnectionError: ");
     }
 
     @Override
     public void onDataChannel(DataChannel dataChannel, NPeerConnection connection) {
-        Log.e(TAG, "onDataChannel: ");
     }
 
     @Override
     public void onBufferedAmountChange(long l, NPeerConnection connection, DataChannel channel) {
-        Log.e(TAG, "onBufferedAmountChange: ");
     }
 
     @Override
     public void onStateChange(NPeerConnection connection, DataChannel channel) {
-        Log.e(TAG, "onStateChange: ");
     }
 
     @Override
@@ -555,15 +360,11 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
         Log.e(TAG, "onMessage: " + buffer);
     }
 
-    enum Reg {
-        REGISTERED,
-        NOT_REGISTERED
-    }
-
-    enum Calling {
-        NO_CALL,
-        PROCESSING_CALL,
-        IN_CALL
+    @Override
+    public void onBackPressed() {
+        stop(true);
+        client.close();
+        super.onBackPressed();
     }
 
 

@@ -186,6 +186,11 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
         client.connect();
     }
 
+    /**
+     * Set trusted certificate from file
+     *
+     * @param inputFile
+     */
     public void setTrustedCertificate(InputStream inputFile) {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -275,6 +280,12 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
         }
     }
 
+    /**
+     * Create register request
+     *
+     * @param callerId
+     * @throws JSONException
+     */
     public void registerRequest(String callerId) throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put("id", "register");
@@ -310,10 +321,11 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
      * @param connectionId
      */
     public void callResponse(String response, String sdpAnswer, String connectionId) {
-        Log.e(TAG, "callResponse: ");
         if (!response.equals("accepted")) {
             Log.e(TAG, "callResponse: Call not accepted by peer. Closing call");
-            stop(true);
+            runOnUiThread(() -> {
+                onBackPressed();
+            });
         } else {
             startCommunication(sdpAnswer, connectionId);
         }
@@ -350,7 +362,6 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
                 public void positive(DialogInterface dialog, View button, View rootView) {
                     callState = Calling.PROCESSING_CALL;
                     nbmWebRTCPeer = new NWebRTCPeer(mediaConfiguration, One2OneActivity.this, localRender, One2OneActivity.this);
-                    nbmWebRTCPeer.initialize();
                     nbmWebRTCPeer.generateOffer(connectionId, true);
                     dialog.dismiss();
                 }
@@ -394,9 +405,7 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
      */
     public void stopCommunication() {
         stop(true);
-        runOnUiThread(() -> {
-            vRegister.setVisibility(View.VISIBLE);
-        });
+        runOnUiThread(this::recreate);
     }
 
     /**
@@ -415,7 +424,6 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
         callState = Calling.PROCESSING_CALL;
         coordinator = true;
         nbmWebRTCPeer = new NWebRTCPeer(mediaConfiguration, One2OneActivity.this, localRender, One2OneActivity.this);
-        nbmWebRTCPeer.initialize(); 
         nbmWebRTCPeer.generateOffer(connectionId, true);
     }
 
@@ -440,12 +448,23 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
             nbmWebRTCPeer.close();
             nbmWebRTCPeer = null;
         }
+        client.close();
     }
 
+    /**
+     * Check socked is connected
+     *
+     * @return
+     */
     public boolean isWebSocketConnected() {
         return client != null && client.getConnection().isOpen();
     }
 
+    /**
+     * Send json message via socket
+     *
+     * @param message
+     */
     protected void send(final JSONObject message) {
         executor.execute(() -> {
             if (isWebSocketConnected()) {
@@ -566,6 +585,7 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
 
     @Override
     public void onBackPressed() {
+        stop(true);
         client.close();
         super.onBackPressed();
     }

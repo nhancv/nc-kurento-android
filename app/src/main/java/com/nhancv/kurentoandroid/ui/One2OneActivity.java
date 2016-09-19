@@ -7,9 +7,9 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 
-import com.gc.materialdesign.views.ButtonFlat;
 import com.nhancv.kurentoandroid.R;
 import com.nhancv.kurentoandroid.util.ICollections;
 import com.nhancv.kurentoandroid.util.NDialog;
@@ -80,9 +80,9 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
     @BindView(R.id.vCall)
     View vCall;
     @BindView(R.id.btRegister)
-    ButtonFlat btRegister;
+    Button btRegister;
     @BindView(R.id.btCall)
-    ButtonFlat btCall;
+    Button btCall;
     @BindView(R.id.etCallerId)
     EditText etCallerId;
     @BindView(R.id.etCalleeId)

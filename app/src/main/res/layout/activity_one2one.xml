@@ -30,7 +30,7 @@
                 android:layout_weight="1"
                 android:hint="caller id" />
 
-            <com.gc.materialdesign.views.ButtonFlat
+            <Button
                 android:id="@+id/btRegister"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -51,7 +51,7 @@
                 android:layout_weight="1"
                 android:hint="callee id" />
 
-            <com.gc.materialdesign.views.ButtonFlat
+            <Button
                 android:id="@+id/btCall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

@@ -9,11 +9,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.Toast;
 
-import com.gc.materialdesign.views.ButtonFlat;
-import com.nhancv.kurentoandroid.util.NDialog;
 import com.nhancv.kurentoandroid.R;
+import com.nhancv.kurentoandroid.util.NDialog;
 
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -80,8 +80,8 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btOne2Many)
     public void btOne2ManyOnClick() {
         Dialog d = NDialog.showDialog(this, R.layout.dialog_one2many, view -> {
-            ButtonFlat btPresenter = (ButtonFlat) view.findViewById(R.id.btPresenter);
-            ButtonFlat btViewer = (ButtonFlat) view.findViewById(R.id.btViewer);
+            Button btPresenter = (Button) view.findViewById(R.id.btPresenter);
+            Button btViewer = (Button) view.findViewById(R.id.btViewer);
             btPresenter.setOnClickListener(v -> {
                 startActivity(new Intent(MainActivity.this, One2ManyPresenterActivity.class));
             });

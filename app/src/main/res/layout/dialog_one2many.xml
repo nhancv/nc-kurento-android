@@ -10,13 +10,13 @@
     android:paddingRight="15dp"
     android:paddingTop="30dp">
 
-    <com.gc.materialdesign.views.ButtonFlat
+    <Button
         android:id="@+id/btPresenter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Presenter" />
 
-    <com.gc.materialdesign.views.ButtonFlat
+    <Button
         android:id="@+id/btViewer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

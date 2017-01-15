@@ -13,9 +13,9 @@ apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'com.neenbedankt.android-apt'
 
 
-Integer VERSION_CODE = 2016091811
+Integer VERSION_CODE = 2016102015
 String VERSION_NAME = "1.0"
-String APK_NAME = "kurento-android"
+String APK_NAME = "StreamingDemo"
 
 android {
     compileSdkVersion 23

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Kurento Android</string>
+    <string name="app_name">StreamingDemo</string>
 
     <!--Dialog-->
     <string name="dialog_later">Later</string>

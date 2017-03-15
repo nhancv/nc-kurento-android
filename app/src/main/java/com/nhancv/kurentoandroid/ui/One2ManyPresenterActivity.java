@@ -55,7 +55,7 @@ public class One2ManyPresenterActivity extends AppCompatActivity implements NWeb
     private static final int LOCAL_Y_CONNECTING = 0;
     private static final int LOCAL_WIDTH_CONNECTING = 100;
     private static final int LOCAL_HEIGHT_CONNECTING = 100;
-    private static final String host = "wss://local.beesightsoft.com:7002/one2many";
+    private static final String host = "wss://local.beesightsoft.com:6008/one2many";
     @BindView(R.id.vGLSurfaceViewCall)
     GLSurfaceView vGLSurfaceViewCall;
     @BindView(R.id.btClose)

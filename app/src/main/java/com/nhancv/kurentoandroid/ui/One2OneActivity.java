@@ -71,7 +71,7 @@ public class One2OneActivity extends AppCompatActivity implements NWebRTCPeer.Ob
     private static final int REMOTE_Y = 0;
     private static final int REMOTE_WIDTH = 100;
     private static final int REMOTE_HEIGHT = 100;
-    private static final String host = "wss://local.beesightsoft.com:7003/one2one";
+    private static final String host = "wss://local.beesightsoft.com:6009/one2one";
     boolean coordinator;
     @BindView(R.id.vGLSurfaceViewCall)
     GLSurfaceView vGLSurfaceViewCall;

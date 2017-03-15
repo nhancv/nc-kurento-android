@@ -53,7 +53,7 @@ public class One2ManyViewerActivity extends AppCompatActivity implements NWebRTC
     private static final int REMOTE_Y = 0;
     private static final int REMOTE_WIDTH = 100;
     private static final int REMOTE_HEIGHT = 100;
-    private static final String host = "wss://local.beesightsoft.com:7002/one2many";
+    private static final String host = "wss://local.beesightsoft.com:6008/one2many";
     @BindView(R.id.vGLSurfaceViewCall)
     GLSurfaceView vGLSurfaceViewCall;
     private NWebRTCPeer nbmWebRTCPeer;

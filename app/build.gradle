@@ -6,16 +6,21 @@ buildscript {
         classpath 'com.android.tools.build:gradle:2.2.0'
         classpath 'me.tatarka:gradle-retrolambda:3.2.2'
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+        classpath 'org.ajoberstar:grgit:1.5.0'
     }
 }
 apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'com.neenbedankt.android-apt'
 
+import org.ajoberstar.grgit.Grgit
 
-Integer VERSION_CODE = 2016102015
-String VERSION_NAME = "1.0"
-String APK_NAME = "StreamingDemo"
+ext {
+    git = Grgit.open(currentDir: projectDir)
+    gitVersionName = git.describe()
+    gitVersionCode = git.tag.list().size()
+    gitVersionCodeTime = git.head().time
+}
 
 android {
     compileSdkVersion 23
@@ -25,15 +30,15 @@ android {
         variant.outputs.each { output ->
             output.outputFile = new File(
                     output.outputFile.parent,
-                    output.outputFile.name.replace(output.outputFile.name, VERSION_CODE + "-" + VERSION_NAME + "-" + APK_NAME + ".apk"))
+                    output.outputFile.name.replace(output.outputFile.name, gitVersionName + "-NRTC.apk"))
         }
     }
     defaultConfig {
         applicationId "com.nhancv.kurentoandroid"
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode VERSION_CODE
-        versionName VERSION_NAME
+        versionCode gitVersionCodeTime
+        versionName gitVersionName
     }
     buildTypes {
         release {
@@ -52,8 +57,17 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'com.github.nhancv:ot-webrtcpeer-android:v1.0.1'
-    compile 'org.java-websocket:Java-WebSocket:1.3.0'
-    compile 'com.jakewharton:butterknife:8.4.0'
-    apt 'com.jakewharton:butterknife-compiler:8.4.0'
+    compile 'com.github.nhancv:nc-android-webrtcpeer:2.1.0'
+    //Android annotation
+    apt "org.androidannotations:androidannotations:4.0.0"
+    compile 'org.androidannotations:androidannotations-api:4.0.0'
+    //Permission
+    compile 'com.github.nhancv:nc-android-npermission:1.4'
+    //Mosby mvp lib
+    compile 'com.hannesdorfmann.mosby:mvp:2.0.1'
+    compile 'com.google.code.gson:gson:2.7'
+    //Async
+    compile 'io.reactivex:rxandroid:1.2.0'
+    compile 'io.reactivex:rxjava:1.1.5'
+
 }

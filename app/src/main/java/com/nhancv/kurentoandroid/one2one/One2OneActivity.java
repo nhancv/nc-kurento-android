@@ -6,12 +6,21 @@ import com.hannesdorfmann.mosby.mvp.MvpActivity;
 import com.nhancv.kurentoandroid.R;
 
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.Extra;
 
 /**
  * Created by nhancao on 7/20/17.
  */
 @EActivity(R.layout.activity_one2one)
 public class One2OneActivity extends MvpActivity<One2OneView, One2OnePresenter> implements One2OneView {
+
+    private static final String TAG = One2OneActivity.class.getSimpleName();
+
+    @Extra
+    protected String userName;
+    @Extra
+    protected boolean isHost;
+
 
     @NonNull
     @Override

@@ -6,11 +6,15 @@ package com.nhancv.kurentoandroid.rtc_peer.kurento.models.response;
 
 public enum IdResponse {
 
+    REGISTER_RESPONSE("registerResponse"),
     PRESENTER_RESPONSE("presenterResponse"),
     ICE_CANDIDATE("iceCandidate"),
     VIEWER_RESPONSE("viewerResponse"),
     STOP_COMMUNICATION("stopCommunication"),
     CLOSE_ROOM_RESPONSE("closeRoomResponse"),
+    INCOMING_CALL("incomingCall"),
+    START_COMMUNICATION("startCommunication"),
+    CALL_RESPONSE("callResponse"),
 
     UN_KNOWN("unknown");
 

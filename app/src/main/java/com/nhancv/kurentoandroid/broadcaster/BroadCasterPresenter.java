@@ -158,6 +158,7 @@ public class BroadCasterPresenter extends MvpBasePresenter<BroadCasterView>
                     if (isViewAttached()) {
                         getView().logAndToast("Socket closed");
                     }
+                    disconnect();
                 });
             }
 
@@ -168,6 +169,7 @@ public class BroadCasterPresenter extends MvpBasePresenter<BroadCasterView>
                     if (isViewAttached()) {
                         getView().logAndToast(e.getMessage());
                     }
+                    disconnect();
                 });
             }
 

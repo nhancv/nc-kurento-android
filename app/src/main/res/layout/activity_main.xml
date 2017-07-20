@@ -18,53 +18,13 @@
         android:text="One2One"
         />
 
-    <LinearLayout
+    <Button
+        android:id="@+id/btOne2One"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        >
-
-        <EditText
-            android:id="@+id/etInputName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="input name"
-            />
-
-        <Button
-            android:id="@+id/btRegister"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:layout_weight="1"
-            android:text="Register"
-            />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        >
-
-        <EditText
-            android:id="@+id/etInputPeer"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="input peer"
-            />
-
-        <Button
-            android:id="@+id/btOne2OneCall"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:layout_weight="1"
-            android:text="Call"
-            />
-    </LinearLayout>
+        android:layout_marginBottom="20dp"
+        android:text="One2One"
+        />
 
     <View
         android:layout_width="match_parent"

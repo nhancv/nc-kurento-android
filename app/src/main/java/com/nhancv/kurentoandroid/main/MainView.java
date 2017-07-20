@@ -8,12 +8,5 @@ import com.hannesdorfmann.mosby.mvp.MvpView;
 
 public interface MainView extends MvpView {
 
-    void logAndToast(String msg);
-
-    void registerStatus(boolean success);
-
-    void transactionToCalling(String name, boolean isHost);
-
-    void incomingCalling(String name);
 
 }

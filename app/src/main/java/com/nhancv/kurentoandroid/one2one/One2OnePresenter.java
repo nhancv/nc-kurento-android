@@ -38,7 +38,7 @@ import java.util.LinkedList;
 
 public class One2OnePresenter extends MvpBasePresenter<One2OneView>
         implements SignalingEvents, PeerConnectionClient.PeerConnectionEvents {
-    public static final String STREAM_HOST = "wss://192.168.2.77:6008/one2one";
+    public static final String STREAM_HOST = "wss://192.168.1.3:6008/one2one";
     private static final String TAG = One2OnePresenter.class.getSimpleName();
     private Application application;
     private SocketService socketService;
@@ -54,7 +54,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     public One2OnePresenter(Application application) {
         this.application = application;
-        this.socketService = new DefaultSocketService(application);
+        this.socketService = new DefaultSocketService();
         this.gson = new Gson();
     }
 

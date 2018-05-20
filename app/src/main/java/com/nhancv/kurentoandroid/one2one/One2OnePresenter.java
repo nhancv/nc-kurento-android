@@ -54,7 +54,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     public One2OnePresenter(Application application) {
         this.application = application;
-        this.socketService = new DefaultSocketService();
+        this.socketService = new DefaultSocketService(application);
         this.gson = new Gson();
     }
 

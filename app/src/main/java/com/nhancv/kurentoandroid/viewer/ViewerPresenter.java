@@ -55,7 +55,7 @@ public class ViewerPresenter extends MvpBasePresenter<ViewerView>
 
     public ViewerPresenter(Application application) {
         this.application = application;
-        this.socketService = new DefaultSocketService(application);
+        this.socketService = new DefaultSocketService();
         this.gson = new Gson();
     }
 

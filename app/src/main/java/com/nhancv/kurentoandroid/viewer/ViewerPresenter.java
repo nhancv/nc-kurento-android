@@ -39,7 +39,7 @@ import static android.content.ContentValues.TAG;
 public class ViewerPresenter extends MvpBasePresenter<ViewerView>
         implements SignalingEvents, PeerConnectionClient.PeerConnectionEvents {
 
-    private static final String STREAM_HOST = "wss://192.168.2.77:6008/one2many";
+    private static final String STREAM_HOST = "wss://192.168.1.3:6008/one2many";
 
     private Application application;
     private SocketService socketService;
